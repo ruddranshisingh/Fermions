@@ -1,6 +1,5 @@
-# Physics notes
+# The Physics Behind The Functions 
 
-GitHub renders the equations below automatically (LaTeX between `$...$` and `$$...$$`).
 
 ## 1. Kitaev chain
 
