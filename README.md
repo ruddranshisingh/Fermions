@@ -2,7 +2,7 @@
 
 **How the fermion-to-qubit encoding decides the cost, and the topological protection, of simulated Majorana modes.**
 
-SC4055 Introduction to Quantum Computing (NTU, 26S1) group project.
+SC4055: Introduction to Quantum Computing group project.
 
 A Kitaev chain stores one bit in two Majorana zero modes at its ends, and that bit is protected against *local, fermion-parity-preserving* noise. On a qubit processor the chain has to be written in qubit language first (Jordan-Wigner, parity, Bravyi-Kitaev, ternary tree). The physics is identical in every encoding, but the *hardware errors* are not: a single-qubit Pauli error can be a harmless local term in one encoding and a logical error in another. This repository measures that, and what each encoding costs in gates.
 
