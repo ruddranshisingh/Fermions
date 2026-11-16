@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strings Attached Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a lab notebook. One column of numbered experiments, each = controls row, chart(s), one-line finding. */
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --ink:#12151c; --ink2:#4b5261; --line:#dfe2e8; --accent:#2b3a8f; --accent-soft:#e8ebf8;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --px:#e34948; --py:#6250d6; --pz:#008300;
+  --heat:42,120,214;
+  --display:"Fraunces",Georgia,serif; --body:"IBM Plex Sans",system-ui,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#111318; --panel:#191c23; --ink:#eceef3; --ink2:#a4abba; --line:#2c313c; --accent:#9aa8ff; --accent-soft:#232a4a;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+    --px:#e66767; --py:#9085e9; --pz:#2fa52f;
+    --heat:57,135,229;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#111318; --panel:#191c23; --ink:#eceef3; --ink2:#a4abba; --line:#2c313c; --accent:#9aa8ff; --accent-soft:#232a4a;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --px:#e66767; --py:#9085e9; --pz:#2fa52f;
+  --heat:57,135,229;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--body)}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 20px 64px;display:flex;flex-direction:column;gap:28px}
+header h1{font:600 34px/1.1 var(--display);margin:0 0 8px;text-wrap:balance;letter-spacing:-.01em}
+header p{margin:0;color:var(--ink2);max-width:68ch}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);margin:0 -20px;padding:8px 20px;display:flex;gap:6px;flex-wrap:wrap}
+nav a{font:500 13px var(--body);color:var(--ink2);text-decoration:none;padding:5px 10px;border-radius:6px}
+nav a:hover,nav a:focus-visible{background:var(--accent-soft);color:var(--accent);outline:none}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.tile b{display:block;font:600 24px/1.15 var(--mono);font-variant-numeric:tabular-nums}
+.tile span{font-size:12.5px;color:var(--ink2);display:block;margin-top:4px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:16px;scroll-margin-top:56px}
+section>h2{font:600 21px/1.2 var(--display);margin:0;text-wrap:balance}
+section>h2 small{font:500 12px var(--mono);color:var(--accent);display:block;margin-bottom:4px;letter-spacing:.04em}
+.lede{margin:0;color:var(--ink2);max-width:72ch}
+.finding{margin:0;padding:10px 14px;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 8px 8px 0;max-width:80ch}
+.finding b{color:var(--accent)}
+.controls{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end}
+.ctl{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--ink2);min-width:150px;flex:1}
+.ctl output{font:600 13px var(--mono);color:var(--ink)}
+.ctl label{display:flex;justify-content:space-between;gap:8px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;flex-wrap:wrap}
+.seg button{font:500 13px var(--body);background:transparent;color:var(--ink2);border:0;padding:7px 12px;cursor:pointer;border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--panel)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.chart{min-width:0}
+.chart h3{font:600 13.5px var(--body);margin:0 0 2px}
+.chart .sub{font-size:12px;color:var(--ink2);margin:0 0 6px}
+.chart svg{width:100%;height:auto;display:block;touch-action:none}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--ink2);margin-top:4px}
+.legend i{display:inline-block;width:14px;height:0;border-top:2.5px solid;vertical-align:middle;margin-right:5px}
+.legend i.dash{border-top-style:dashed}
+.legend i.box{height:10px;border:0;border-radius:2px}
+.readout{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.readout div{border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+.readout b{font:600 16px var(--mono);display:block;font-variant-numeric:tabular-nums}
+.readout span{font-size:12px;color:var(--ink2)}
+.pill{display:inline-block;padding:1px 9px;border-radius:99px;font:600 12px var(--body)}
+.pill.topo{background:rgba(27,175,122,.16);color:var(--s3)}
+.pill.triv{background:rgba(227,73,72,.14);color:var(--px)}
+.strings{overflow-x:auto}
+.strings table{border-collapse:separate;border-spacing:2px;font:500 12px var(--mono)}
+.strings th{font-weight:500;color:var(--ink2);padding:2px 8px 2px 0;text-align:right;white-space:nowrap}
+.strings td{width:26px;height:22px;text-align:center;border-radius:3px;color:var(--ink2);background:var(--bg)}
+.strings td.X{background:var(--px);color:#fff}.strings td.Y{background:var(--py);color:#fff}.strings td.Z{background:var(--pz);color:#fff}
+.heat{display:grid;gap:3px;align-items:center;font:500 12px var(--mono);overflow-x:auto}
+.heat button{height:44px;min-width:46px;border:1px solid var(--line);border-radius:5px;cursor:pointer;font:500 11.5px var(--mono);color:var(--ink);padding:0;line-height:1.25}
+.heat button small{display:block;font-size:10px;opacity:.75}
+.heat button[aria-pressed=true]{outline:2.5px solid var(--accent);outline-offset:1px}
+.heat button:focus-visible{outline:2.5px solid var(--accent);outline-offset:1px}
+.heat .lab{color:var(--ink2);text-align:center}
+.detail{border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:13.5px}
+.detail code,.mono{font-family:var(--mono);font-size:12.5px}
+.detail dl{display:grid;grid-template-columns:auto 1fr;gap:3px 14px;margin:8px 0 0}
+.detail dt{color:var(--ink2)}.detail dd{margin:0}
+table.data{border-collapse:collapse;width:100%;font-size:13px}
+table.data th,table.data td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+table.data th:first-child,table.data td:first-child{text-align:left}
+table.data th{font-weight:600;color:var(--ink2);font-size:12px}
+.scroll{overflow-x:auto}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font:12px/1.45 var(--body);padding:7px 10px;border-radius:6px;z-index:20;opacity:0;transition:opacity .08s;max-width:280px}
+#tip b{font-family:var(--mono);font-weight:600}
+#tip .k{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+footer{color:var(--ink2);font-size:13px}
+footer code{font-family:var(--mono);font-size:12.5px;background:var(--accent-soft);padding:1px 5px;border-radius:4px}
+@media (max-width:760px){.tiles,.readout{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}header h1{font-size:27px}section{padding:16px}}
+@media (prefers-reduced-motion:reduce){#tip{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Strings Attached Lab</h1>
+  <p>A Kitaev chain hides one bit of information in two Majorana modes at its ends. To simulate it on a quantum computer you must first translate fermions into qubits, and there are several ways to do that. This lab shows how the choice of translation decides which qubit errors the topology shrugs off, which ones break it, and what each choice costs in gates.</p>
+</header>
+
+<div class="tiles" id="tiles"></div>
+
+<nav aria-label="Experiments">
+  <a href="#live">Live chain</a><a href="#encodings">Encodings</a><a href="#validation">E1 Validation</a><a href="#dictionary">E2 Error dictionary</a><a href="#cost">E3 Cost</a><a href="#noise">E4 Noise</a>
+</nav>
+
+<section id="live">
+  <h2><small>LIVE · computed in your browser</small>The Kitaev chain and its two edge Majoranas</h2>
+  <p class="lede">Drag the sliders. The page solves the chain exactly (Bogoliubov–de Gennes) on every change. Inside the topological phase the two lowest states become degenerate and the zero modes sit at opposite ends of the chain.</p>
+  <div class="controls">
+    <div class="ctl"><label for="ctl-n">Chain length N <output id="out-n"></output></label><input id="ctl-n" type="range" min="3" max="40" step="1" value="14"></div>
+    <div class="ctl"><label for="ctl-mu">Chemical potential μ / t <output id="out-mu"></output></label><input id="ctl-mu" type="range" min="0" max="4" step="0.01" value="1"></div>
+    <div class="ctl"><label for="ctl-d">Pairing Δ / t <output id="out-d"></output></label><input id="ctl-d" type="range" min="0.05" max="1.5" step="0.05" value="1"></div>
+  </div>
+  <div class="readout">
+    <div><b id="r-phase"></b><span>phase</span></div>
+    <div><b id="r-split"></b><span>ground-state splitting E₁ − E₀</span></div>
+    <div><b id="r-gap"></b><span>bulk gap</span></div>
+    <div><b id="r-edge"></b><span>zero-mode weight on the two end sites</span></div>
+  </div>
+  <div class="grid2">
+    <div class="chart"><h3>Lowest two excitation energies against μ</h3><p class="sub">Log scale. The vertical line is your current μ; the phase boundary is at μ = 2t.</p><div id="live-spec"></div></div>
+    <div class="chart"><h3>Where the two zero modes live</h3><p class="sub">Probability weight of each Majorana mode on every site.</p><div id="live-wave"></div></div>
+  </div>
+  <div class="detail" id="live-strings"></div>
+</section>
+
+<section id="encodings">
+  <h2><small>THE FOUR TRANSLATIONS</small>What each Majorana operator looks like on qubits</h2>
+  <p class="lede">Each row is one Majorana operator γ, written as a string of Pauli gates on 8 qubits. Coloured cells are where the operator acts. Long rows are expensive and exposed to more errors.</p>
+  <div class="seg" id="enc-seg" role="group" aria-label="Encoding"></div>
+  <div class="strings" id="enc-strings"></div>
+  <p class="finding" id="enc-note"></p>
+</section>
+
+<section id="validation">
+  <h2><small>E1 · VALIDATION</small>All four encodings reproduce the exact solution</h2>
+  <p class="lede">Markers are exact diagonalisation of the 12-qubit Hamiltonian in each encoding. The black line is the exact free-fermion answer, computed without any qubits.</p>
+  <div class="grid2">
+    <div class="chart"><h3>Ground-state splitting against μ</h3><p class="sub">N = 12, log scale.</p><div id="e1-split"></div></div>
+    <div class="chart"><h3>Edge-to-edge Majorana correlator</h3><p class="sub">|⟨iγ₀γ₂ₙ₋₁⟩|: close to 1 means the ends are entangled through the zero modes.</p><div id="e1-edge"></div></div>
+  </div>
+  <p class="finding" id="e1-finding"></p>
+</section>
+
+<section id="dictionary">
+  <h2><small>E2 · THE HEADLINE RESULT</small>The error dictionary</h2>
+  <p class="lede">Pick an encoding, then click a cell to translate that single-qubit error back into fermion language. The number in each cell is how strongly that error splits the two ground states at first order (0 = invisible, 2 = a full logical error).</p>
+  <div class="seg" id="dict-seg" role="group" aria-label="Encoding"></div>
+  <div class="grid2">
+    <div><div class="heat" id="dict-heat"></div><div class="detail" id="dict-detail" style="margin-top:12px"></div></div>
+    <div class="chart"><h3>Splitting against chain length under a uniform error field</h3><p class="sub" id="dict-sub"></p>
+      <div class="seg" id="delta-seg" role="group" aria-label="Pairing" style="margin-bottom:8px"></div>
+      <div id="dict-chart"></div></div>
+  </div>
+  <p class="finding" id="dict-finding"></p>
+</section>
+
+<section id="cost">
+  <h2><small>E3 · COST</small>CNOT gates for one Trotter step, after routing to hardware</h2>
+  <p class="lede">Each Hamiltonian is compiled with Qiskit onto four device layouts. Bars show the mean over routing seeds for the better of two mode orderings.</p>
+  <div class="seg" id="geo-seg" role="group" aria-label="Geometry"></div>
+  <div class="grid2">
+    <div class="chart"><h3 id="cost-title"></h3><p class="sub">CNOT count, lower is better.</p><div id="cost-chart"></div></div>
+    <div class="chart"><h3>Pauli weight of the longest possible bond</h3><p class="sub">Mode 0 coupled to mode n − 1. This is where the logarithmic encodings eventually win.</p><div id="weight-chart"></div></div>
+  </div>
+  <div class="scroll"><table class="data" id="cost-table"></table></div>
+  <p class="finding" id="cost-finding"></p>
+</section>
+
+<section id="noise">
+  <h2><small>E4 · NOISE</small>Does checking fermion parity rescue a noisy simulation?</h2>
+  <p class="lede">A 6-site ground state is evolved through 4 Trotter steps with depolarising gate noise (density-matrix simulation). Runs whose fermion parity flipped are thrown away.</p>
+  <div class="seg" id="noise-seg" role="group" aria-label="Quantity"></div>
+  <div class="grid2">
+    <div class="chart"><h3 id="noise-title"></h3><p class="sub">Against two-qubit error rate p₂, line connectivity.</p><div id="noise-chart"></div></div>
+    <div class="chart"><h3>Fidelity against circuit depth</h3><p class="sub" id="noise-sub2"></p><div id="steps-chart"></div></div>
+  </div>
+  <div class="scroll"><table class="data" id="noise-table"></table></div>
+  <p class="finding" id="noise-finding"></p>
+</section>
+
+<footer>Every number on this page except the live chain comes from <code>python scripts/run_experiments.py</code> in the project repository; rebuild this page with <code>python scripts/build_demo.py</code>.</footer>
+</div>
+<div id="tip" role="status"></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const ENC = ["jordan_wigner","parity","bravyi_kitaev","ternary_tree"];
+const ENAME = {jordan_wigner:"Jordan–Wigner",parity:"Parity",bravyi_kitaev:"Bravyi–Kitaev",ternary_tree:"Ternary tree"};
+const ECOL = {jordan_wigner:"var(--s1)",parity:"var(--s2)",bravyi_kitaev:"var(--s3)",ternary_tree:"var(--s4)"};
+const PCOL = {X:"var(--px)",Y:"var(--py)",Z:"var(--pz)"};
+const $ = id => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+const tip = $("tip");
+
+function fmt(v){
+  if (v === 0) return "0";
+  const a = Math.abs(v);
+  if (a < 1e-15) return "< 1e-15";
+  if (Number.isInteger(v) && a < 1e4) return String(v);
+  if (a >= 1e4 || a < 1e-3) { const e = Math.floor(Math.log10(a)); return (v/10**e).toFixed(2) + "e" + e; }
+  if (a >= 100) return v.toFixed(0);
+  if (a >= 10) return v.toFixed(1);
+  if (a >= 1) return v.toFixed(2);
+  return v.toFixed(a < 0.01 ? 4 : 3);
+}
+function logLab(t){ return Number.isInteger(t) && (t > 3 || t < -2) ? "1e" + t : fmt(+(10 ** t).toPrecision(2)); }
+function el(tag, attrs, parent){ const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+function showTip(html, x, y){ tip.innerHTML = html; tip.style.opacity = 1; const w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = Math.min(window.innerWidth - w - 8, Math.max(8, x + 14)) + "px"; tip.style.top = Math.max(8, y - h - 12) + "px"; }
+function hideTip(){ tip.style.opacity = 0; }
+
+function ticks(lo, hi, log){
+  if (log){ const out = []; const a = Math.ceil(lo - 1e-9), b = Math.floor(hi + 1e-9); const step = Math.max(1, Math.ceil((b - a) / 6));
+    for (let e = a; e <= b; e += step) out.push(e);
+    if (hi - lo < 2.5) for (let e = Math.floor(lo); e <= b; e++) [2, 5].forEach(k => { const v = e + Math.log10(k); if (v >= lo - 1e-9 && v <= hi + 1e-9) out.push(v); });
+    return out; }
+  const span = hi - lo || 1, raw = span / 5, p = 10 ** Math.floor(Math.log10(raw)), m = raw / p;
+  const step = (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; const out = [];
+  for (let v = Math.ceil(lo / step - 1e-9) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(10)); return out;
+}
+
+/* Line chart with crosshair tooltip. series: [{name,color,dash,points:[[x,y]],markers}] */
+function lineChart(host, o){
+  host.innerHTML = "";
+  const W = 520, H = 300, m = {l:54, r:14, t:10, b:40};
+  const svg = el("svg", {viewBox:`0 0 ${W} ${H}`, role:"img", "aria-label":o.label || "chart"}, host);
+  const tx = v => o.xlog ? Math.log10(v) : v, ty = v => o.ylog ? Math.log10(Math.max(v, o.yfloor || 1e-16)) : v;
+  let xs = [], ys = [];
+  o.series.forEach(s => s.points.forEach(p => { xs.push(tx(p[0])); ys.push(ty(p[1])); }));
+  let x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = o.ymin !== undefined ? ty(o.ymin) : Math.min(...ys), y1 = o.ymax !== undefined ? ty(o.ymax) : Math.max(...ys);
+  if (o.ylog){ y0 = Math.floor(y0 - 1e-9); y1 = Math.ceil(y1 + 1e-9); } else if (o.ymin === undefined){ const pad = (y1 - y0) * 0.06 || 1; y0 -= pad; y1 += pad; }
+  if (x0 === x1){ x0 -= 1; x1 += 1; }
+  const X = v => m.l + (tx(v) - x0) / (x1 - x0) * (W - m.l - m.r), Y = v => H - m.b - (ty(v) - y0) / (y1 - y0) * (H - m.t - m.b);
+  const g = el("g", {style:"font:11px var(--body);fill:var(--ink2)"}, svg);
+  ticks(y0, y1, o.ylog).forEach(t => { const y = H - m.b - (t - y0) / (y1 - y0) * (H - m.t - m.b);
+    el("line", {x1:m.l, x2:W - m.r, y1:y, y2:y, style:"stroke:var(--line)"}, g);
+    el("text", {x:m.l - 7, y:y + 4, "text-anchor":"end"}, g).textContent = o.ylog ? logLab(t) : fmt(t); });
+  ticks(x0, x1, o.xlog).forEach(t => { const x = m.l + (t - x0) / (x1 - x0) * (W - m.l - m.r);
+    el("text", {x:x, y:H - m.b + 16, "text-anchor":"middle"}, g).textContent = o.xlog ? logLab(t) : fmt(t); });
+  el("line", {x1:m.l, x2:W - m.r, y1:H - m.b, y2:H - m.b, style:"stroke:var(--ink2)"}, g);
+  if (o.xlabel) el("text", {x:(m.l + W - m.r) / 2, y:H - 6, "text-anchor":"middle"}, g).textContent = o.xlabel;
+  (o.vlines || []).forEach(v => { el("line", {x1:X(v.x), x2:X(v.x), y1:m.t, y2:H - m.b, style:`stroke:${v.color || "var(--ink2)"};stroke-dasharray:3 3`}, svg);
+    if (v.text) el("text", {x:X(v.x) + 5, y:m.t + 11, style:"font:11px var(--body);fill:var(--ink2)"}, svg).textContent = v.text; });
+  o.series.forEach(s => {
+    const d = s.points.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1)).join("");
+    if (!s.markersOnly) el("path", {d, fill:"none", style:`stroke:${s.color};stroke-width:2;stroke-linejoin:round${s.dash ? ";stroke-dasharray:6 4" : ""}`}, svg);
+    if (s.markers || s.markersOnly) s.points.forEach(p => el("circle", {cx:X(p[0]), cy:Y(p[1]), r:3.6, style:`fill:${s.dash ? "var(--panel)" : s.color};stroke:${s.color};stroke-width:1.6`}, svg));
+  });
+  const cross = el("line", {y1:m.t, y2:H - m.b, style:"stroke:var(--ink2);stroke-width:1;opacity:0"}, svg);
+  const hit = el("rect", {x:m.l, y:m.t, width:W - m.l - m.r, height:H - m.t - m.b, fill:"transparent"}, svg);
+  const allx = [...new Set(o.series.flatMap(s => s.points.map(p => p[0])))].sort((a, b) => a - b);
+  function move(ev){
+    const r = svg.getBoundingClientRect(), px = (ev.clientX - r.left) / r.width * W;
+    let best = allx[0]; allx.forEach(x => { if (Math.abs(X(x) - px) < Math.abs(X(best) - px)) best = x; });
+    cross.setAttribute("x1", X(best)); cross.setAttribute("x2", X(best)); cross.style.opacity = .6;
+    let html = `<div>${o.xname || o.xlabel || "x"} = <b>${fmt(best)}</b></div>`;
+    o.series.forEach(s => { const p = s.points.find(q => q[0] === best); if (p) html += `<div><span class="k" style="background:${s.color}"></span>${s.name}: <b>${fmt(p[1])}</b></div>`; });
+    showTip(html, ev.clientX, ev.clientY);
+  }
+  hit.addEventListener("pointermove", move); hit.addEventListener("pointerdown", move);
+  hit.addEventListener("pointerleave", () => { cross.style.opacity = 0; hideTip(); });
+  const lg = document.createElement("div"); lg.className = "legend";
+  o.series.forEach(s => { if (s.hideLegend) return; const sp = document.createElement("span"); sp.innerHTML = `<i class="${s.dash ? "dash" : ""}" style="border-color:${s.color}"></i>${s.name}`; lg.appendChild(sp); });
+  host.appendChild(lg);
+}
+
+/* Grouped bar chart. groups: labels; series: [{name,color,values}] */
+function barChart(host, o){
+  host.innerHTML = "";
+  const W = 520, H = 300, m = {l:48, r:10, t:10, b:34};
+  const svg = el("svg", {viewBox:`0 0 ${W} ${H}`, role:"img", "aria-label":o.label || "bar chart"}, host);
+  const ymax = Math.max(...o.series.flatMap(s => s.values)) * 1.08;
+  const Y = v => H - m.b - v / ymax * (H - m.t - m.b);
+  const g = el("g", {style:"font:11px var(--body);fill:var(--ink2)"}, svg);
+  ticks(0, ymax, false).forEach(t => { el("line", {x1:m.l, x2:W - m.r, y1:Y(t), y2:Y(t), style:"stroke:var(--line)"}, g);
+    el("text", {x:m.l - 7, y:Y(t) + 4, "text-anchor":"end"}, g).textContent = t; });
+  const gw = (W - m.l - m.r) / o.groups.length, bw = Math.min(26, (gw - 16) / o.series.length);
+  o.groups.forEach((lab, gi) => {
+    const cx = m.l + gw * (gi + .5);
+    el("text", {x:cx, y:H - m.b + 16, "text-anchor":"middle"}, g).textContent = lab;
+    o.series.forEach((s, si) => {
+      const v = s.values[gi], x = cx + (si - o.series.length / 2) * bw + 1, y = Y(v), h = H - m.b - y;
+      const r = Math.min(4, h);
+      const bar = el("path", {d:`M${x} ${H - m.b}V${y + r}q0 ${-r} ${r} ${-r}h${bw - 2 - 2 * r}q${r} 0 ${r} ${r}V${H - m.b}Z`, style:`fill:${s.color}`}, svg);
+      const html = `<div>${lab}</div><div><span class="k" style="background:${s.color}"></span>${s.name}: <b>${fmt(v)}</b>${s.notes ? " · " + s.notes[gi] : ""}</div>`;
+      bar.addEventListener("pointermove", ev => showTip(html, ev.clientX, ev.clientY));
+      bar.addEventListener("pointerleave", hideTip);
+      if (o.series.length * o.groups.length <= 16) el("text", {x:x + (bw - 2) / 2, y:y - 4, "text-anchor":"middle", style:"font:10px var(--mono);fill:var(--ink)"}, svg).textContent = Math.round(v);
+    });
+  });
+  el("line", {x1:m.l, x2:W - m.r, y1:H - m.b, y2:H - m.b, style:"stroke:var(--ink2)"}, g);
+  const lg = document.createElement("div"); lg.className = "legend";
+  o.series.forEach(s => { const sp = document.createElement("span"); sp.innerHTML = `<i class="box" style="background:${s.color}"></i>${s.name}`; lg.appendChild(sp); });
+  host.appendChild(lg);
+}
+
+function segmented(host, items, initial, onPick){
+  host.innerHTML = "";
+  items.forEach(([key, label]) => { const b = document.createElement("button"); b.type = "button"; b.textContent = label; b.setAttribute("aria-pressed", key === initial);
+    b.addEventListener("click", () => { host.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); onPick(key); }); host.appendChild(b); });
+}
+
+/* ---------------------------------------------------------------- live chain */
+/* The single-particle energies are the singular values of the N x N matrix
+   B = -mu*I + (Delta - t) * superdiagonal - (Delta + t) * subdiagonal.
+   One-sided Jacobi SVD keeps tiny singular values accurate. */
+function chainSVD(n, mu, delta){
+  const t = 1, a = []; const v = [];
+  for (let i = 0; i < n; i++){ a.push(new Float64Array(n)); v.push(new Float64Array(n)); v[i][i] = 1; a[i][i] = -mu; }
+  for (let i = 0; i + 1 < n; i++){ a[i][i + 1] = delta - t; a[i + 1][i] = -(delta + t); }
+  for (let sweep = 0; sweep < 60; sweep++){
+    let off = 0;
+    for (let p = 0; p < n - 1; p++) for (let q = p + 1; q < n; q++){
+      let alpha = 0, beta = 0, gamma = 0;
+      for (let i = 0; i < n; i++){ alpha += a[i][p] * a[i][p]; beta += a[i][q] * a[i][q]; gamma += a[i][p] * a[i][q]; }
+      if (Math.abs(gamma) <= 1e-15 * Math.sqrt(alpha * beta) || gamma === 0) continue;
+      off = Math.max(off, Math.abs(gamma) / Math.sqrt(alpha * beta));
+      const zeta = (beta - alpha) / (2 * gamma), tt = Math.sign(zeta || 1) / (Math.abs(zeta) + Math.sqrt(1 + zeta * zeta)), c = 1 / Math.sqrt(1 + tt * tt), s = c * tt;
+      for (let i = 0; i < n; i++){ const ap = a[i][p], aq = a[i][q]; a[i][p] = c * ap - s * aq; a[i][q] = s * ap + c * aq;
+        const vp = v[i][p], vq = v[i][q]; v[i][p] = c * vp - s * vq; v[i][q] = s * vp + c * vq; }
+    }
+    if (off < 1e-14) break;
+  }
+  const sig = []; for (let k = 0; k < n; k++){ let s = 0; for (let i = 0; i < n; i++) s += a[i][k] * a[i][k]; sig.push(Math.sqrt(s)); }
+  const order = sig.map((s, k) => k).sort((x, y) => sig[x] - sig[y]); const k0 = order[0];
+  const u = [], w = []; for (let i = 0; i < n; i++){ u.push(sig[k0] > 0 ? (a[i][k0] / sig[k0]) ** 2 : 0); w.push(v[i][k0] ** 2); }
+  return {levels: order.map(k => sig[k]), left: u, right: w};
+}
+const live = {n:14, mu:1, d:1, sweep:null};
+function liveSweep(){
+  const mus = []; for (let i = 0; i <= 80; i++) mus.push(0.02 + i * 0.05 * 0.995);
+  live.sweep = mus.map(mu => { const r = chainSVD(live.n, mu, live.d); return [mu, r.levels[0], r.levels[1]]; });
+}
+function liveDraw(full){
+  if (full) liveSweep();
+  const r = chainSVD(live.n, Math.max(live.mu, 1e-9), live.d), topo = live.mu < 2;
+  $("out-n").textContent = live.n; $("out-mu").textContent = live.mu.toFixed(2); $("out-d").textContent = live.d.toFixed(2);
+  $("r-phase").innerHTML = `<span class="pill ${topo ? "topo" : "triv"}">${topo ? "Topological" : "Trivial"}</span>`;
+  $("r-split").textContent = fmt(r.levels[0]); $("r-gap").textContent = fmt(r.levels[1]);
+  $("r-edge").textContent = (100 * (r.left[0] + r.right[live.n - 1]) / 2).toFixed(1) + "%";
+  lineChart($("live-spec"), {ylog:true, yfloor:1e-14, ymin:1e-14, ymax:10, xlabel:"μ / t", xname:"μ/t", label:"Excitation energies against chemical potential",
+    vlines:[{x:live.mu, color:"var(--accent)"}, {x:2, text:"μ = 2t"}],
+    series:[{name:"splitting E₁ − E₀", color:"var(--s1)", points:live.sweep.map(p => [p[0], Math.max(p[1], 1e-14)])},
+            {name:"bulk gap", color:"var(--s2)", points:live.sweep.map(p => [p[0], p[2]])}]});
+  lineChart($("live-wave"), {ymin:0, ymax:1, xlabel:"site", xname:"site", label:"Zero-mode weight per site",
+    series:[{name:"left Majorana (γ-even type)", color:"var(--s1)", markers:live.n <= 24, points:r.left.map((v, i) => [i, v])},
+            {name:"right Majorana (γ-odd type)", color:"var(--s2)", markers:live.n <= 24, points:r.right.map((v, i) => [i, v])}]});
+  const n = live.n, cut = s => s.length > 26 ? s.slice(0, 11) + " … " + s.slice(-11) : s;
+  const jwR = "Z".repeat(n - 1) + "Y", parL = "X".repeat(n);
+  $("live-strings").innerHTML = `<b>The same two edge operators, written on ${n} qubits</b>
+    <dl><dt>Jordan–Wigner</dt><dd>left γ₀ = <code>X${"I".repeat(Math.min(n - 1, 3))}…</code> (1 qubit) · right γ = <code>${cut(jwR)}</code> (${n} qubits)</dd>
+    <dt>Parity</dt><dd>left γ₀ = <code>${cut(parL)}</code> (${n} qubits) · right γ = <code>…${"I".repeat(Math.min(n - 1, 3))}Y</code> (1 qubit)</dd></dl>
+    <div style="margin-top:6px;color:var(--ink2)">The two encodings are mirror images: each makes one edge mode a single qubit and smears the other across the whole register.</div>`;
+}
+["n","mu","d"].forEach(k => $("ctl-" + k).addEventListener("input", ev => { live[k] = +ev.target.value; liveDraw(k !== "mu"); }));
+
+/* ------------------------------------------------------------------- tiles */
+(function(){
+  const e1 = DATA.e1, e2 = DATA.e2, e3 = DATA.e3, e4 = DATA.e4;
+  const dev = Math.max(...ENC.flatMap(e => Object.values(e1.sweep.max_abs_deviation_from_bdg[e])));
+  const run = e2.runs["delta=1.0"], last = run.unperturbed.length - 1;
+  const ratio = run["JW X (all qubits)"][last] / run.unperturbed[last];
+  const cx = (enc) => e3.rows.find(r => r.geometry.startsWith("chain") && r.encoding === enc && r.connectivity === "line").cx_mean;
+  const i3 = e4.p2.findIndex(p => Math.abs(p - 1e-3) < 1e-9), c = e4.curves.line;
+  const removed = e => 1 - (1 - c[e].fidelity_postselected[i3]) / (1 - c[e].fidelity_raw[i3]);
+  $("tiles").innerHTML = [
+    [fmt(dev), "largest disagreement between any encoding and the exact solution"],
+    ["×" + Math.round(ratio).toLocaleString(), `how much a Jordan–Wigner X error field widens the splitting at N = ${e2.n[last]}; Z and Y errors leave it within a factor of 2`],
+    [Math.round(cx("jordan_wigner")) + " vs " + Math.round(cx("bravyi_kitaev")), "CNOTs per Trotter step on a 12-site chain: Jordan–Wigner vs Bravyi–Kitaev"],
+    [Math.round(100 * removed("jordan_wigner")) + "% vs " + Math.round(100 * removed("parity")) + "%", "share of the noise damage removed by a parity check: Jordan–Wigner vs parity encoding"],
+  ].map(t => `<div class="tile"><b>${t[0]}</b><span>${t[1]}</span></div>`).join("");
+})();
+
+/* --------------------------------------------------------------- encodings */
+const ENC_NOTE = {
+  jordan_wigner:"Jordan–Wigner stores each site's occupation in its own qubit. The price is the tail of Z gates that counts the particles to the left, so the last Majorana touches every qubit.",
+  parity:"The parity encoding stores running totals instead. Now the first Majorana is the long one (it must update every running total) and the last qubit alone holds the total fermion parity.",
+  bravyi_kitaev:"Bravyi–Kitaev stores partial sums in a binary tree, so no string is longer than about log₂ N. On a short chain that advantage does not show yet.",
+  ternary_tree:"The ternary tree gives the shortest strings possible, about log₃(2N). Its strings are scattered across the register, which hardware with only neighbour links pays for in routing.",
+};
+function drawStrings(e){
+  const t = DATA.e2.dictionary.encodings[e], n = DATA.e2.dictionary.n;
+  let h = "<table><tr><th></th>" + [...Array(n).keys()].map(q => `<td style="background:none">q${q}</td>`).join("") + "<th>weight</th></tr>";
+  t.majorana_strings.forEach((s, a) => { const w = [...s].filter(c => c !== "I").length;
+    h += `<tr><th>γ${a}</th>` + [...s].map(c => `<td class="${c}">${c === "I" ? "·" : c}</td>`).join("") + `<th style="text-align:left;padding-left:8px">${w}</th></tr>`; });
+  h += `<tr><th>parity</th>` + [...t.parity_operator].map(c => `<td class="${c}">${c === "I" ? "·" : c}</td>`).join("") + `<th style="text-align:left;padding-left:8px">${[...t.parity_operator].filter(c => c !== "I").length}</th></tr></table>`;
+  $("enc-strings").innerHTML = h; $("enc-note").textContent = ENC_NOTE[e];
+}
+segmented($("enc-seg"), ENC.map(e => [e, ENAME[e]]), "jordan_wigner", drawStrings);
+
+/* ---------------------------------------------------------------------- E1 */
+(function(){
+  const s = DATA.e1.sweep;
+  const mk = key => [{name:"exact free-fermion", color:"var(--ink)", points:s.mu.map((m, i) => [m, s.bdg[key][i]])}]
+    .concat(ENC.map((e, k) => ({name:ENAME[e], color:ECOL[e], markersOnly:true, points:s.mu.map((m, i) => [m, s.ed[e][key][i]]).filter((p, i) => i % 4 === k)})));
+  lineChart($("e1-split"), {ylog:true, yfloor:1e-14, ymin:1e-14, ymax:10, xlabel:"μ / t", xname:"μ/t", vlines:[{x:2, text:"μ = 2t"}], series:mk("splitting"), label:"Splitting against chemical potential"});
+  lineChart($("e1-edge"), {ymin:0, ymax:1.05, xlabel:"μ / t", xname:"μ/t", vlines:[{x:2, text:"μ = 2t"}], series:mk("edge"), label:"Edge correlator against chemical potential"});
+  const dev = Math.max(...ENC.flatMap(e => Object.values(s.max_abs_deviation_from_bdg[e])));
+  const fs = Math.max(...DATA.e1.full_spectrum.flatMap(f => Object.values(f.max_dev_between_encodings)));
+  $("e1-finding").innerHTML = `<b>Finding.</b> Across ${s.mu.length} values of μ, every encoding matches the exact solution to within ${fmt(dev)} (energies, splitting, gap and edge correlator). The full spectra of all four encodings also agree to ${fmt(fs)} on a chain, a ladder and a T-junction. The encodings are four descriptions of one physical system.`;
+})();
+
+/* ---------------------------------------------------------------------- E2 */
+const dict = {enc:"jordan_wigner", delta:"delta=1.0", sel:null};
+const DICT_CLASSES = {
+  jordan_wigner:[["JW X (all qubits)","X errors","X",0],["JW Y (all qubits)","Y errors","Y",0],["JW Z (all qubits)","Z errors","Z",0]],
+  parity:[["Parity X (qubits 0..N-2)","X, bulk qubits","X",0],["Parity Y (qubits 0..N-2)","Y, bulk qubits","Y",0],["Parity Z (qubits 0..N-2)","Z, bulk qubits","Z",0],
+          ["Parity X (qubit N-1)","X, last qubit","X",1],["Parity Y (qubit N-1)","Y, last qubit","Y",1],["Parity Z (qubit N-1)","Z, last qubit","Z",1]],
+  bravyi_kitaev:[["BK X (all qubits)","X errors","X",0],["BK Y (all qubits)","Y errors","Y",0],["BK Z (all qubits)","Z errors","Z",0]],
+};
+const DICT_FIND = {
+  jordan_wigner:"<b>Finding.</b> Z errors are chemical-potential noise and stay exponentially protected. X errors act like a magnet on the hidden ferromagnet and split the states by about 2εN, growing with chain length. Y errors are parity-odd yet completely harmless when Δ = t: a rotation about the X axis turns them into a slightly larger μ, and the measured splitting matches that prediction to every digit.",
+  parity:"<b>Finding.</b> The roles reverse. X and Y errors on the bulk qubits are harmless because X there is the Kitaev bond itself. All the danger concentrates on the last qubit, which stores the fermion parity: any error there splits the states at first order, by an amount that does not shrink with N. Z errors on nearby qubits leak in too, each weaker by a factor μ/2t per step away from the end.",
+  bravyi_kitaev:"<b>Finding.</b> Bravyi–Kitaev sits between the two. Its last qubit again stores the parity and is exposed, and Z errors on the tree's partial-sum qubits (3 and 7 here) inherit part of that exposure. Y and Z fields still decay with N, but more slowly than in the clean chain.",
+  ternary_tree:"<b>Finding.</b> In the ternary tree the vulnerable qubits are the root (qubit 0) and one of its children (qubit 3): the fermion parity is Z₀Z₃, so the logical information sits near the top of the tree rather than at an end of the chain. (No length sweep was run for this encoding.)",
+};
+function drawDict(){
+  const D = DATA.e2.dictionary, n = D.n, rows = D.encodings[dict.enc].rows, host = $("dict-heat");
+  host.style.gridTemplateColumns = `22px repeat(${n}, minmax(46px, 1fr))`; host.innerHTML = "<span></span>" + [...Array(n).keys()].map(q => `<span class="lab">q${q}</span>`).join("");
+  "XYZ".split("").forEach(p => { const lab = document.createElement("span"); lab.className = "lab"; lab.textContent = p; host.appendChild(lab);
+    for (let q = 0; q < n; q++){ const r = rows.find(x => x.pauli === p && x.qubit === q), v = Math.max(0, r.first_order);
+      const b = document.createElement("button"); b.type = "button"; b.style.background = `rgba(var(--heat),${(0.04 + 0.9 * Math.min(1, v / 2)).toFixed(3)})`;
+      b.innerHTML = `${v.toFixed(2)}<small>${r.parity}</small>`; b.setAttribute("aria-label", `${p} on qubit ${q}: first-order splitting ${v.toFixed(2)}, parity ${r.parity}`);
+      b.setAttribute("aria-pressed", dict.sel && dict.sel.pauli === p && dict.sel.qubit === q);
+      b.addEventListener("click", () => { dict.sel = r; drawDict(); }); host.appendChild(b); } });
+  const r = dict.sel || rows.find(x => x.first_order > 1) || rows[0];
+  const verdict = r.first_order > 0.2 ? "Unprotected: splits the ground states at first order." : "Protected at first order: the ground states do not see it.";
+  const prod = r.majoranas.length > 8 ? r.majoranas.slice(0, 4).map(a => "γ" + a).join("·") + " ··· " + r.majoranas.slice(-2).map(a => "γ" + a).join("·") : r.majoranas.map(a => "γ" + a).join("·");
+  $("dict-detail").innerHTML = `<b>${r.pauli} error on qubit ${r.qubit}, ${ENAME[dict.enc]} encoding</b>
+    <dl><dt>As fermions</dt><dd><code>${prod}</code></dd>
+    <dt>Majoranas involved</dt><dd>${r.majorana_weight} (${r.parity} fermion parity)</dd>
+    <dt>Reach along the chain</dt><dd>${r.local ? "local" : "non-local"}: spans ${r.span} of ${2 * n} Majorana sites${r.touches_left_edge ? ", touches the left edge mode" : ""}${r.touches_right_edge ? ", touches the right edge mode" : ""}</dd>
+    <dt>First-order splitting</dt><dd><b>${r.first_order.toFixed(3)}</b> × ε</dd></dl><div style="margin-top:6px">${verdict}</div>`;
+  const cls = DICT_CLASSES[dict.enc], run = DATA.e2.runs[dict.delta], ns = DATA.e2.n;
+  if (cls){
+    $("dict-chart").style.display = ""; $("delta-seg").style.display = "";
+    $("dict-sub").textContent = `ε = ${DATA.e2.eps}, μ = t. Log scale. Dashed lines are errors on the last qubit only.`;
+    lineChart($("dict-chart"), {ylog:true, xlabel:"chain length N", xname:"N", label:"Splitting against chain length",
+      series:[{name:"no error", color:"var(--ink)", points:ns.map((n, i) => [n, run.unperturbed[i]])}]
+        .concat(cls.map(c => ({name:c[1], color:PCOL[c[2]], dash:!!c[3], markers:true, points:ns.map((n, i) => [n, run[c[0]][i]])})))});
+  } else { $("dict-chart").style.display = "none"; $("delta-seg").style.display = "none"; $("dict-sub").textContent = "Length sweep not run for this encoding; see the per-qubit map on the left."; }
+  $("dict-finding").innerHTML = DICT_FIND[dict.enc];
+}
+segmented($("dict-seg"), ENC.map(e => [e, ENAME[e]]), "jordan_wigner", e => { dict.enc = e; dict.sel = null; drawDict(); });
+segmented($("delta-seg"), [["delta=1.0", "Δ = t"], ["delta=0.6", "Δ = 0.6 t"]], "delta=1.0", d => { dict.delta = d; drawDict(); });
+
+/* ---------------------------------------------------------------------- E3 */
+const CONN = ["line","heavy_hex","grid","all_to_all"], CNAME = {line:"line", heavy_hex:"heavy-hex", grid:"grid", all_to_all:"all-to-all"};
+function drawCost(geo){
+  const rows = DATA.e3.rows.filter(r => r.geometry === geo);
+  const best = (e, c) => rows.filter(r => r.encoding === e && r.connectivity === c).sort((a, b) => a.cx_mean - b.cx_mean)[0];
+  $("cost-title").textContent = "Kitaev model on a " + geo.replace(/\s*\(.*/, "") + " of " + rows[0].n + " sites";
+  barChart($("cost-chart"), {groups:CONN.map(c => CNAME[c]), label:"CNOT count by encoding and connectivity",
+    series:ENC.map(e => ({name:ENAME[e], color:ECOL[e], values:CONN.map(c => best(e, c).cx_mean), notes:CONN.map(c => best(e, c).ordering + " ordering")}))});
+  const ords = [...new Set(rows.map(r => r.ordering))];
+  let h = "<tr><th>Encoding</th><th>Ordering</th><th>Terms</th><th>Max weight</th><th>Mean weight</th>" + CONN.map(c => `<th>CNOT, ${CNAME[c]}</th>`).join("") + "<th>Depth, line</th></tr>";
+  ENC.forEach(e => ords.forEach(o => { const r = c => rows.find(x => x.encoding === e && x.ordering === o && x.connectivity === c), a = r("line");
+    h += `<tr><td>${ENAME[e]}</td><td>${o}</td><td>${a.terms}</td><td>${a.max_weight}</td><td>${a.mean_weight.toFixed(2)}</td>` + CONN.map(c => `<td>${fmt(r(c).cx_mean)}</td>`).join("") + `<td>${fmt(a.depth_mean)}</td></tr>`; }));
+  $("cost-table").innerHTML = h;
+}
+(function(){
+  const geos = [...new Set(DATA.e3.rows.map(r => r.geometry))];
+  segmented($("geo-seg"), geos.map(g => [g, g]), geos[0], drawCost); drawCost(geos[0]);
+  const ws = DATA.e3.weight_scaling;
+  lineChart($("weight-chart"), {xlog:true, ylog:true, xlabel:"number of modes n", xname:"n", label:"Pauli weight of the longest bond",
+    series:ENC.map(e => ({name:ENAME[e], color:ECOL[e], markers:true, points:ws.n.map((n, i) => [n, ws.longest[e][i]])}))});
+  const g = (geo, e, c) => Math.min(...DATA.e3.rows.filter(r => r.geometry.startsWith(geo) && r.encoding === e && r.connectivity === c).map(r => r.cx_mean));
+  const lad = o => DATA.e3.rows.find(r => r.geometry.startsWith("ladder") && r.encoding === "jordan_wigner" && r.connectivity === "line" && r.ordering === o).cx_mean;
+  $("cost-finding").innerHTML = `<b>Finding.</b> In one dimension the "old" encoding wins: Jordan–Wigner needs ${Math.round(g("chain","jordan_wigner","line"))} CNOTs where Bravyi–Kitaev needs ${Math.round(g("chain","bravyi_kitaev","line"))} and the ternary tree ${Math.round(g("chain","ternary_tree","line"))}. On the T-junction, the geometry needed for braiding, strings appear but Jordan–Wigner still leads (${Math.round(g("T-junction","jordan_wigner","line"))} vs ${Math.round(g("T-junction","bravyi_kitaev","line"))}). Mode ordering matters as much as the encoding: numbering the ladder leg by leg instead of rung by rung raises the Jordan–Wigner cost from ${Math.round(lad("rung order"))} to ${Math.round(lad("leg order"))}. The tree encodings only pay off for long-range bonds on large systems (right chart).`;
+})();
+
+/* ---------------------------------------------------------------------- E4 */
+const NOISE_Q = {ps:["Infidelity after parity post-selection", c => c.fidelity_postselected.map(f => 1 - f)], raw:["Raw infidelity (no post-selection)", c => c.fidelity_raw.map(f => 1 - f)], drop:["Fraction of runs discarded by the parity check", c => c.kept_fraction.map(f => 1 - f)]};
+function drawNoise(q){
+  const d = DATA.e4; $("noise-title").textContent = NOISE_Q[q][0];
+  lineChart($("noise-chart"), {xlog:true, ylog:true, xlabel:"two-qubit error rate p₂", xname:"p₂", label:NOISE_Q[q][0],
+    series:ENC.map(e => ({name:ENAME[e], color:ECOL[e], markers:true, points:d.p2.map((p, i) => [p, NOISE_Q[q][1](d.curves.line[e])[i]])}))});
+}
+(function(){
+  const d = DATA.e4, sc = d.steps_scan;
+  segmented($("noise-seg"), [["ps","Post-selected"],["raw","Raw"],["drop","Discarded runs"]], "ps", drawNoise); drawNoise("ps");
+  $("noise-sub2").textContent = `At p₂ = ${sc.p2}. Solid: post-selected. Dashed: raw.`;
+  lineChart($("steps-chart"), {xlabel:"Trotter steps", xname:"steps", label:"Fidelity against Trotter steps",
+    series:ENC.flatMap(e => [{name:ENAME[e], color:ECOL[e], markers:true, points:sc.steps.map((s, i) => [s, sc.curves[e].fidelity_postselected[i]])},
+                             {name:ENAME[e] + " (raw)", color:ECOL[e], dash:true, hideLegend:true, points:sc.steps.map((s, i) => [s, sc.curves[e].fidelity_raw[i]])}])});
+  const i3 = d.p2.findIndex(p => Math.abs(p - 1e-3) < 1e-9);
+  let h = "<tr><th>Encoding</th><th>CNOTs</th><th>1-qubit gates</th><th>Depth</th><th>Parity check weight</th><th>Raw fidelity</th><th>Post-selected</th><th>Runs kept</th><th>Damage removed</th></tr>";
+  ENC.forEach(e => { const c = d.curves.line[e], k = d.circuits.line[e], rem = 1 - (1 - c.fidelity_postselected[i3]) / (1 - c.fidelity_raw[i3]);
+    h += `<tr><td>${ENAME[e]}</td><td>${k.cx}</td><td>${k.sx_x}</td><td>${k.depth}</td><td>${k.parity_check_weight}</td><td>${c.fidelity_raw[i3].toFixed(4)}</td><td>${c.fidelity_postselected[i3].toFixed(4)}</td><td>${(100 * c.kept_fraction[i3]).toFixed(1)}%</td><td>${Math.round(100 * rem)}%</td></tr>`; });
+  $("noise-table").innerHTML = h;
+  $("noise-finding").innerHTML = `<b>Finding.</b> The table is at p₂ = 0.001. Without post-selection the parity encoding is best, because it needs the fewest gates. With post-selection Jordan–Wigner overtakes it at every noise rate tested: its parity check spans all ${d.n} qubits, so most single-qubit errors flip it and get caught. The parity encoding's check is one qubit wide and misses nearly everything. The ranking flips when you turn the check on, and no crossover in noise rate appears between ${fmt(d.p2[0])} and ${fmt(d.p2[d.p2.length - 1])}.`;
+})();
+
+drawStrings("jordan_wigner"); drawDict(); liveDraw(true);
+</script>
+</body>
+</html>

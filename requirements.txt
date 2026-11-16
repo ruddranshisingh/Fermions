@@ -1,0 +1,8 @@
+numpy>=1.26
+scipy>=1.11
+matplotlib>=3.8
+qiskit>=2.0
+qiskit-aer>=0.17
+pytest>=8.0
+# optional, only for tests/test_pennylane_crosscheck.py
+# pennylane>=0.40
